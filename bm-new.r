@@ -50,21 +50,21 @@ seurat_obj <- CreateSeuratObject(
 print(table(seurat_obj$celltype))
 # Shows counts of cells by type
 
-# Expected: Seurat object with all cells, containing celltype metadata column
+# Seurat object with all cells, containing celltype metadata column
 
 # Verify counts and cell type annotations
 print(table(seurat_obj$celltype))
-# Expected: Table showing number of cells per population
+#Table showing number of cells per population
 
 # Calculate percentage of mitochondrial genes
 seurat_obj[["percent.mt"]] <- PercentageFeatureSet(seurat_obj, pattern = "^mt-")
-# Expected: Adds percent.mt column to metadata
+#Adds percent.mt column to metadata
 
 # QC metrics visualization
 p_qc <- VlnPlot(seurat_obj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
         group.by = "celltype", ncol = 3, pt.size = 0.1)
 print(p_qc)
-# Expected: Violin plots showing QC metrics by cell type
+#Violin plots showing QC metrics by cell type
 
 # Quality control filtering as described in methods section
 # "We removed cells that had fewer than 1,000 detected genes"
@@ -75,22 +75,20 @@ seurat_obj <- subset(seurat_obj, subset = nFeature_RNA >= 1000)
 # we removed any cells in the top 2% quantile"
 top_2_percent <- quantile(seurat_obj$nFeature_RNA, 0.98)
 seurat_obj <- subset(seurat_obj, subset = nFeature_RNA < top_2_percent)
-# Expected: ~2% fewer cells than previous step
 
 # "We also removed cells with more than 10% of the transcripts coming from mitochondrial genes"
 seurat_obj <- subset(seurat_obj, subset = percent.mt < 10)
-# Expected: Further reduction in cell count
 
 # Print remaining cells by population
 print(table(seurat_obj$celltype))
-# Expected: Distribution of cells after filtering, similar to Fig.1 population proportions
+# Distribution of cells after filtering, similar to Fig.1 population proportions
 
 # "We also removed 965 contaminating cells—most of which were haematopoietic cells"
 # For this step, we'd need to identify contaminating hematopoietic cells
 # We could use known markers like Ptprc (CD45)
 seurat_obj <- NormalizeData(seurat_obj)
 FeaturePlot(seurat_obj, features = "Ptprc")
-# Expected: Shows expression of hematopoietic marker
+# Shows expression of hematopoietic marker
 
 # Remove contaminating cells (adjust threshold as needed based on expression)
 seurat_obj <- subset(seurat_obj, subset = Ptprc < 1)
@@ -98,45 +96,45 @@ seurat_obj <- subset(seurat_obj, subset = Ptprc < 1)
 
 # Print final cell count
 print(paste("Final cell count after filtering:", ncol(seurat_obj)))
-# Expected: ~17,000-17,500 cells (paper reports 17,374 cells)
+# Expected, ~17,000-17,500 cells (paper reports 17,374 cells)
 
 # Normalize data as described in methods
 # "We normalized the data by the total expression, multiplied by a scale factor of 10,000 and log-transformed"
 seurat_obj <- NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000)
-# Expected: Normalized data in the RNA assay
+
 
 # Find variable features for dimensionality reduction
 # "We took the union of the top 2,000 genes with the highest dispersion from both datasets"
 seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 2000)
 print(paste("Number of variable features:", length(VariableFeatures(seurat_obj))))
-# Expected: 2000 variable features
+# aroundf 2000 variable features
 
 # Scale data
 seurat_obj <- ScaleData(seurat_obj, features = rownames(seurat_obj))
-# Expected: Adds scaled data to the object
+# Adds scaled data to the object
 
 # Run PCA
 # "We then aligned the subspaces on the basis of the first 30 canonical correlation vectors"
 seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj), npcs = 40)
-# Expected: PCA reduction added to object
+# PCA reduction added to object
 
 # Examine PCA results
 print(seurat_obj[["pca"]], dims = 1:5, nfeatures = 5)
-# Expected: Top genes contributing to first 5 PCs
+# Top genes contributing to first 5 PCs
 
 # Determine optimal dimensionality
 ElbowPlot(seurat_obj, ndims = 40)
-# Expected: Elbow plot showing variance explained by each PC
+#Elbow plot showing variance explained by each PC
 
 # Use t-SNE for visualization (as in the paper)
 # "We further reduced the dimensionality... to project the cells in 2D space using t-SNE"
 seurat_obj <- RunTSNE(seurat_obj, dims = 1:30)
-# Expected: Adds t-SNE reduction to object
+
 
 # Find clusters
 # "Aligned canonical correlation analysis was also used as a basis for partitioning the dataset"
 seurat_obj <- FindNeighbors(seurat_obj, reduction = "pca", dims = 1:30)
-# Expected: Builds KNN graph for clustering
+
 
 # Finding clusters with resolution parameter
 # Paper found "10 transcriptionally similar subpopulations"
@@ -145,7 +143,7 @@ seurat_obj <- FindClusters(seurat_obj, resolution = 0.5)
 
 # Check cluster distribution
 print(table(seurat_obj$seurat_clusters))
-# Expected: Distribution of cells across 10-11 clusters
+# Distribution of cells across 10-11 clusters
 
 # Create Figure 1B - Expression of key marker genes
 p1b <- FeaturePlot(seurat_obj, 
@@ -160,7 +158,7 @@ print(p1b)
 # Show cell types on t-SNE
 p_celltypes <- DimPlot(seurat_obj, reduction = "tsne", group.by = "celltype")
 print(p_celltypes)
-# Expected: t-SNE with cells colored by original population
+
 
 # Create Figure 1D - Cluster visualization
 p1d <- DimPlot(seurat_obj, reduction = "tsne", group.by = "seurat_clusters", label = TRUE) +
@@ -175,7 +173,7 @@ all_markers <- FindAllMarkers(seurat_obj,
                              min.pct = 0.25, 
                              logfc.threshold = 0.25,
                              test.use = "MAST")  # Paper used MAST method
-# Expected: Data frame with marker genes for each cluster
+# Data frame with marker genes for each cluster
 
 # Get top 10 markers per cluster for Fig.1C
 # "We used the 10 most-significant positive markers for heat map visualization"
@@ -199,15 +197,15 @@ print(p1c)
 figure1 <- (p1b / p1c / p1d) + 
            plot_layout(heights = c(1, 1.5, 1))
 print(figure1)
-# Expected: Complete Figure 1 with three panels (B, C, D)
+
 
 # Save the Seurat object for further analysis
 saveRDS(seurat_obj, file = "bone_marrow_niche_seurat.rds")
-# Expected: Saves the analyzed Seurat object
+
 
 # Save the figure
 ggsave("Figure1_reproduction.pdf", figure1, width = 12, height = 16)
-# Expected: Saves the combined figure as PDF
+
 ##This code provides a complete workflow to reproduce Figure 1 from the paper using the combined-first approach. Each step includes comments about the expected results, which should help you verify that your analysis is on track.
 ##The key visualization elements in Figure 1 are:
 
